@@ -11,14 +11,14 @@
         "kind": "invoice",
         "ref_id": 501,
         "amount": 840.0,
-        "approved_by": "Ila Athamam"
+        "approved_by": "Athamam"
       },
       {
         "payment_id": 2,
         "kind": "rent",
         "ref_id": 1,
         "amount": 2400.0,
-        "approved_by": "Ila Athamam"
+        "approved_by": "Athamam"
       }
     ],
     "total_paid": 3240.0,
@@ -82,7 +82,7 @@
           "amount": 840.0,
           "requested_by": "accounting",
           "status": "approved",
-          "decided_by": "Ila Athamam",
+          "decided_by": "Athamam",
           "decision_note": "Paid as payment 1",
           "payee": "Bulldog Print Co",
           "cash_moved": -840.0
@@ -93,7 +93,7 @@
           "amount": 8.0,
           "requested_by": "accounting",
           "status": "approved",
-          "decided_by": "Ila Athamam",
+          "decided_by": "Athamam",
           "decision_note": null,
           "cash_moved": 0.0,
           "item": "1 x Classic Bulldog Tee (CC-TEE-WHITE) size S from Bulldog Print Co"
@@ -187,7 +187,7 @@
           "amount": 2400.0,
           "requested_by": "accounting",
           "status": "approved",
-          "decided_by": "Ila Athamam",
+          "decided_by": "Athamam",
           "decision_note": "Paid as payment 2",
           "payee": "Elm City Properties",
           "cash_moved": -2400.0
@@ -289,7 +289,7 @@
           "amount": 1044.0,
           "requested_by": "accounting",
           "status": "approved",
-          "decided_by": "Ila Athamam",
+          "decided_by": "Athamam",
           "decision_note": null,
           "cash_moved": 0.0,
           "item": "20 x CC-HOOD-NAVY at $52.2 (10.0% off)"
@@ -300,7 +300,7 @@
           "amount": 264.0,
           "requested_by": "accounting",
           "status": "approved",
-          "decided_by": "Ila Athamam",
+          "decided_by": "Athamam",
           "decision_note": null,
           "cash_moved": 0.0,
           "item": "12 x Basic Hoodie Big Yale (CC-HOOD-NAVY) size M from Bulldog Print Co"
