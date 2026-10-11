@@ -1,0 +1,14 @@
+# Campus Customs Multi-Agent Operations (hw5) - Python requirements
+# Versions are pinned to the set this project was built and tested against.
+
+# --- MCP server ---
+fastmcp==4.1.0                         # Campus Customs MCP server and client
+
+# --- Agent team ---
+pydantic-ai-slim[openai,mcp]==2.55.0   # PydanticAI agents + MCP toolsets (model: gpt-6-luna via Portkey)
+openai==3.29.0                         # OpenAI-compatible client pointed at the Portkey gateway
+python-dotenv==1.2.4                   # loads PORTKEY_API_KEY from the course-root .env
+
+# --- Backend API (Problem 7) ---
+fastapi==0.143.0
+uvicorn[standard]==0.54.0

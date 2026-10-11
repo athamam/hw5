@@ -1,0 +1,355 @@
+{
+  "run_date": "2026-10-11",
+  "shop_date": "2026-08-31",
+  "model": "gpt-6-luna (via Portkey) for every agent",
+  "database": "data/campus_customs_new.db (reset from data/campus_customs.db before the run)",
+  "cash_summary": {
+    "starting_checking": 3400.0,
+    "payments": [
+      {
+        "payment_id": 1,
+        "kind": "invoice",
+        "ref_id": 501,
+        "amount": 840.0,
+        "approved_by": "Ila Athamam"
+      },
+      {
+        "payment_id": 2,
+        "kind": "rent",
+        "ref_id": 1,
+        "amount": 2400.0,
+        "approved_by": "Ila Athamam"
+      }
+    ],
+    "total_paid": 3240.0,
+    "ending_checking": 160.0,
+    "ending_matches_cash_accounts": true,
+    "math": "3,400.00 - 840.00 - 2,400.00 = 160.00"
+  },
+  "tickets": [
+    {
+      "id": 101,
+      "type": "customer_order",
+      "requester": "Tauhid Zaman",
+      "subject": "Bulldog tee",
+      "final_status": "resolved",
+      "outcome": "Size S tee was out of stock (0 on hand). The human paid overdue invoice 501 ($840) to unblock Bulldog Print Co and approved a 1-unit restock PO ($8, arriving 2026-09-05). Tauhid has a follow-up draft saying the tee is on its way.",
+      "agents": {
+        "boss": {
+          "contribution": "Called Inventory first, then Accounting, then Customer Service. Set the ticket to waiting_on_human, and on the close-out run confirmed both approvals and resolved it.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket_status"
+          ]
+        },
+        "inventory": {
+          "contribution": "Found CC-TEE-WHITE S qty 0 (short 1). Matched Bulldog Print Co (apparel reprint, 5 lead days) and found it blocked by overdue invoice 501. Earliest arrival 2026-09-05.",
+          "mcp_tools": [
+            "check_stock",
+            "check_vendor_can_ship",
+            "list_vendors"
+          ]
+        },
+        "accounting": {
+          "contribution": "Requested payment of invoice 501 ($840; projected cash $2,560) and drafted PO #1 for 1 tee at $8 (blocked until 501 paid). Posted a ticket note.",
+          "mcp_tools": [
+            "add_ticket_note",
+            "check_vendor_can_ship",
+            "create_purchase_order",
+            "get_cash_balance",
+            "get_pricing",
+            "get_ticket",
+            "list_invoices",
+            "list_vendors",
+            "request_payment"
+          ]
+        },
+        "customer_service": {
+          "contribution": "Draft #1 (out of stock, restock under review) and follow-up draft #2 (payment and restock cleared, arriving Sept 5). Nothing was sent.",
+          "mcp_tools": [
+            "draft_customer_message",
+            "get_ticket"
+          ]
+        }
+      },
+      "agents_not_used": [
+        "facilities"
+      ],
+      "human_approvals": [
+        {
+          "approval_id": 1,
+          "kind": "payment",
+          "amount": 840.0,
+          "requested_by": "accounting",
+          "status": "approved",
+          "decided_by": "Ila Athamam",
+          "decision_note": "Paid as payment 1",
+          "payee": "Bulldog Print Co",
+          "cash_moved": -840.0
+        },
+        {
+          "approval_id": 2,
+          "kind": "purchase_order",
+          "amount": 8.0,
+          "requested_by": "accounting",
+          "status": "approved",
+          "decided_by": "Ila Athamam",
+          "decision_note": null,
+          "cash_moved": 0.0,
+          "item": "1 x Classic Bulldog Tee (CC-TEE-WHITE) size S from Bulldog Print Co"
+        }
+      ],
+      "cash": {
+        "checking_before": 3400.0,
+        "change": -840.0,
+        "checking_after": 2560.0
+      },
+      "drafts": [
+        {
+          "draft_id": 1,
+          "to": "Tauhid Zaman",
+          "subject": "Update on your Bulldog tee",
+          "status": "draft"
+        },
+        {
+          "draft_id": 2,
+          "to": "Tauhid Zaman",
+          "subject": "Update on your Bulldog tee",
+          "status": "draft"
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "ade4358d55c5",
+          "handoffs": [
+            "boss -> inventory",
+            "boss -> accounting",
+            "boss -> customer_service"
+          ],
+          "model_requests": 19,
+          "total_tokens": 54269
+        },
+        {
+          "run_id": "9699542b6efa",
+          "handoffs": [
+            "boss -> customer_service"
+          ],
+          "model_requests": 7,
+          "total_tokens": 19762
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "type": "rent_notice",
+      "requester": "Elm City Properties",
+      "subject": "Rent due",
+      "final_status": "resolved",
+      "outcome": "The rent notice matched lease 1 ($2,400 due 2026-09-02). The human approved and paid the rent; lease 1's next due date moved to 2026-10-02. The landlord has a payment-confirmation draft.",
+      "agents": {
+        "boss": {
+          "contribution": "Called Facilities first and Customer Service last. Set the ticket to waiting_on_human, then resolved it on the close-out run after the rent was paid.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket_status"
+          ]
+        },
+        "facilities": {
+          "contribution": "Verified lease 1: $2,400 to Elm City Properties, due 2026-09-02, 2 days away, not overdue. Handed the payment to Accounting directly.",
+          "mcp_tools": [
+            "add_ticket_note",
+            "get_lease"
+          ]
+        },
+        "accounting": {
+          "contribution": "Requested the $2,400 rent payment for lease 1 (cash $2,560, projected $160, never negative).",
+          "mcp_tools": [
+            "get_cash_balance",
+            "get_ticket",
+            "request_payment"
+          ]
+        },
+        "customer_service": {
+          "contribution": "Draft #3 (rent confirmed, payment pending approval) and follow-up draft #4 (rent paid). Nothing was sent.",
+          "mcp_tools": [
+            "draft_customer_message",
+            "get_ticket"
+          ]
+        }
+      },
+      "agents_not_used": [
+        "inventory"
+      ],
+      "human_approvals": [
+        {
+          "approval_id": 3,
+          "kind": "payment",
+          "amount": 2400.0,
+          "requested_by": "accounting",
+          "status": "approved",
+          "decided_by": "Ila Athamam",
+          "decision_note": "Paid as payment 2",
+          "payee": "Elm City Properties",
+          "cash_moved": -2400.0
+        }
+      ],
+      "cash": {
+        "checking_before": 2560.0,
+        "change": -2400.0,
+        "checking_after": 160.0
+      },
+      "drafts": [
+        {
+          "draft_id": 3,
+          "to": "Elm City Properties",
+          "subject": "Rent due September 2",
+          "status": "draft"
+        },
+        {
+          "draft_id": 4,
+          "to": "Elm City Properties",
+          "subject": "Lease 1 rent payment confirmation",
+          "status": "draft"
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "4a148818f537",
+          "handoffs": [
+            "boss -> facilities",
+            "facilities -> accounting",
+            "boss -> customer_service"
+          ],
+          "model_requests": 16,
+          "total_tokens": 37922
+        },
+        {
+          "run_id": "427e39d8de32",
+          "handoffs": [
+            "boss -> customer_service"
+          ],
+          "model_requests": 7,
+          "total_tokens": 17538
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "type": "price_override",
+      "requester": "Yale AI Club",
+      "subject": "Bulk hoodie discount",
+      "final_status": "resolved",
+      "outcome": "8 of 20 size M hoodies were on hand (short 12). The human approved a 10% bulk discount ($52.20 each, $1,044 total, margin $30.20/unit) and a 12-unit restock PO ($264, arriving 2026-09-05). No cash moved. The Yale AI Club has a confirmation draft.",
+      "agents": {
+        "boss": {
+          "contribution": "Called Inventory first, then Accounting, then Customer Service. Set the ticket to waiting_on_human, then resolved it after both approvals.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket_status"
+          ]
+        },
+        "inventory": {
+          "contribution": "Found CC-HOOD-NAVY M qty 8 (short 12). Bulldog Print Co can ship (invoice 501 already paid on 101), arriving 2026-09-05.",
+          "mcp_tools": [
+            "check_stock",
+            "check_vendor_can_ship",
+            "list_vendors"
+          ]
+        },
+        "accounting": {
+          "contribution": "Checked pricing ($22 cost, $58 list), proposed a 10% discount at $52.20 (57.9% margin), and drafted PO #2 for 12 hoodies ($264). Checked approvals and made no duplicate invoice request.",
+          "mcp_tools": [
+            "add_ticket_note",
+            "check_stock",
+            "check_vendor_can_ship",
+            "create_purchase_order",
+            "get_cash_balance",
+            "get_pricing",
+            "get_ticket",
+            "list_approvals",
+            "list_vendors",
+            "propose_price_override"
+          ]
+        },
+        "customer_service": {
+          "contribution": "Draft #5 (price and restock under review) and follow-up draft #6 (price and restock approved). Nothing was sent.",
+          "mcp_tools": [
+            "draft_customer_message",
+            "get_ticket"
+          ]
+        }
+      },
+      "agents_not_used": [
+        "facilities"
+      ],
+      "human_approvals": [
+        {
+          "approval_id": 4,
+          "kind": "price_override",
+          "amount": 1044.0,
+          "requested_by": "accounting",
+          "status": "approved",
+          "decided_by": "Ila Athamam",
+          "decision_note": null,
+          "cash_moved": 0.0,
+          "item": "20 x CC-HOOD-NAVY at $52.2 (10.0% off)"
+        },
+        {
+          "approval_id": 5,
+          "kind": "purchase_order",
+          "amount": 264.0,
+          "requested_by": "accounting",
+          "status": "approved",
+          "decided_by": "Ila Athamam",
+          "decision_note": null,
+          "cash_moved": 0.0,
+          "item": "12 x Basic Hoodie Big Yale (CC-HOOD-NAVY) size M from Bulldog Print Co"
+        }
+      ],
+      "cash": {
+        "checking_before": 160.0,
+        "change": 0.0,
+        "checking_after": 160.0
+      },
+      "drafts": [
+        {
+          "draft_id": 5,
+          "to": "Yale AI Club",
+          "subject": "Update on your bulk hoodie request",
+          "status": "draft"
+        },
+        {
+          "draft_id": 6,
+          "to": "Yale AI Club",
+          "subject": "Update on your bulk hoodie request",
+          "status": "draft"
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "a3c2c0fc88d8",
+          "handoffs": [
+            "boss -> inventory",
+            "boss -> accounting",
+            "boss -> customer_service"
+          ],
+          "model_requests": 18,
+          "total_tokens": 52024
+        },
+        {
+          "run_id": "d72cb1f4c857",
+          "handoffs": [
+            "boss -> customer_service"
+          ],
+          "model_requests": 7,
+          "total_tokens": 20732
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "agent_runs": 6,
+    "model_requests": 74,
+    "total_tokens": 202247
+  }
+}
