@@ -102,7 +102,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  health: () => request<{ status: string; model: string; busy_with_ticket: number | null }>('/health'),
+  health: () =>
+    request<{ status: string; model: string; ai_ready: boolean; ai_error: string | null; busy_with_ticket: number | null }>('/health'),
   tickets: () => request<{ tickets: Ticket[]; running_ticket: number | null }>('/tickets'),
   ticket: (id: number) => request<TicketDetail>(`/tickets/${id}`),
   run: (id: number) => request<RunResult>(`/tickets/${id}/run`, { method: 'POST' }),

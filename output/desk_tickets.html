@@ -477,6 +477,18 @@ Close-out:  Boss ──► Customer Service</div>
     <h3>Reflection</h3>
     <p class="lead">I ran all three tickets on 2026-10-11 after resetting the database, starting at $3,400.00. Everything below is based on what's in the 101, 102, 103 and Cash tabs on this page, plus the audit trail (<code>output/audit_trail.json</code>, entries from index 188 on). The short version: the crew followed every Campus Customs rule, landed the cash at exactly <b>$160.00</b>, and never sent a specialist it didn't need. Where it was weak was efficiency and thinking one step ahead about money.</p>
 
+    <h4>Human approvals on each ticket (what I signed, and why)</h4>
+    <p>No dollar moved without my signature on the board. These are every request the crew prepared on the full run, what I decided, and what it did to cash (101, 102 and 103 tabs, plus the Cash tab):</p>
+    <table>
+      <tr><th>Ticket</th><th>Request (prepared by)</th><th>My decision and why</th><th>Cash effect</th></tr>
+      <tr><td rowspan="2"><b>101</b><br>Bulldog tee</td><td>#1 pay invoice 501 to Bulldog Print Co, <b>$840.00</b> (Accounting)</td><td><b>Approved, signed first.</b> The invoice is real, 3 days overdue against desk.date_today, and it's the reason the vendor won't ship Tauhid's tee.</td><td>−$840.00 → <b>$2,560.00</b></td></tr>
+      <tr><td>#2 PO 1 × CC-TEE-WHITE S, $8.00 (Accounting)</td><td><b>Approved, signed second.</b> It's exactly Tauhid's shortfall. It would have been refused if I'd signed it before #1, since the vendor was blocked.</td><td>$0.00 (a PO is a commitment, not a payment)</td></tr>
+      <tr><td><b>102</b><br>Rent due</td><td>#3 pay rent for lease 1 to Elm City Properties, <b>$2,400.00</b> (Accounting, handed off by Facilities)</td><td><b>Approved.</b> Facilities matched the landlord's notice to the lease ($2,400 due 2026-09-02), and the projected cash after paying was $160, not negative.</td><td>−$2,400.00 → <b>$160.00</b></td></tr>
+      <tr><td rowspan="2"><b>103</b><br>Bulk hoodies</td><td>#4 price override: 20 × CC-HOOD-NAVY M at $52.20 (10% off), $1,044.00 (Accounting)</td><td><b>Approved.</b> It still clears the $22 cost by $30.20 a hoodie (57.9% margin), which is a fair student-club deal.</td><td>$0.00 (selling price; no revenue collected in this app)</td></tr>
+      <tr><td>#5 PO 12 × CC-HOOD-NAVY M, $264.00 (Accounting)</td><td><b>Approved, with a flag.</b> 12 is exactly the shortfall and the vendor was unblocked by #1. But it commits $264 against $160 in checking (Cash tab, watch-out box).</td><td>$0.00 today; a future bill</td></tr>
+    </table>
+    <p class="ev">5 requests, 5 approvals, 0 rejections. 2 payments totalling $3,240.00. $3,400.00 − $3,240.00 = $160.00, which matches <code>cash_accounts</code>.</p>
+
     <!-- ============================================================ 1 -->
     <h4>1. How I'd evaluate the agents on each ticket, and why</h4>
     <p>I graded each ticket on six things. Rules and money come first, because a wrong payment or wrong cash number is worse for CC than a slow run:</p>

@@ -2,11 +2,41 @@
   "server": "campus-customs",
   "connection": ".mcp.json",
   "database": "data/campus_customs_new.db",
-  "tested_at": "2026-10-11T15:24:12",
+  "tested_at": "2026-10-11T17:54:45",
+  "note": "Current results were captured on the committed working database after the Problem 9 full run (rent paid, so lease 1 is next due 2026-10-02). The original Problem 4 test on the fresh copy (lease due 2026-09-02, 2 days away) is kept under previous_runs with its db_snapshot.",
+  "db_snapshot": {
+    "date_today": "2026-08-31",
+    "checking_balance": 160.0,
+    "ticket_statuses": {
+      "101": "resolved",
+      "102": "resolved",
+      "103": "resolved"
+    },
+    "lease_1_next_due": "2026-10-02",
+    "payments_recorded": 2
+  },
   "tools_listed_by_server": [
+    "add_ticket_note",
+    "approve_request",
     "check_stock",
+    "check_vendor_can_ship",
+    "create_purchase_order",
+    "draft_customer_message",
+    "get_cash_balance",
+    "get_desk",
     "get_lease",
-    "get_pricing"
+    "get_pricing",
+    "get_ticket",
+    "list_approvals",
+    "list_invoices",
+    "list_tickets",
+    "list_vendors",
+    "pay",
+    "propose_price_override",
+    "reject_request",
+    "request_payment",
+    "reset_database",
+    "update_ticket_status"
   ],
   "all_passed": true,
   "tests": [
@@ -59,7 +89,7 @@
     },
     {
       "ticket": 102,
-      "vibe_coder_prompt": "Ticket 102: Elm City Properties says rent is due in 2 days. Use the campus-customs MCP server to look up lease 1 and tell me the rent amount, the due date and how many days are left.",
+      "vibe_coder_prompt": "Ticket 102: Elm City Properties sent a rent notice. Use the campus-customs MCP server to look up lease 1 and tell me the rent amount, the next due date and how many days are left.",
       "tool": "get_lease",
       "arguments": {
         "lease_id": 1
@@ -69,18 +99,18 @@
         "space_name": "Chapel Street shop",
         "landlord": "Elm City Properties",
         "monthly_rent": 2400.0,
-        "next_due": "2026-09-02",
-        "notes": null,
+        "next_due": "2026-10-02",
+        "notes": "Rent due 2026-09-02 paid 2026-08-31 (approval 3).",
         "date_today": "2026-08-31",
-        "days_until_due": 2,
+        "days_until_due": 32,
         "is_overdue": false
       },
       "db_values_checked": {
         "landlord": "Elm City Properties",
         "monthly_rent": 2400.0,
-        "next_due": "2026-09-02",
+        "next_due": "2026-10-02",
         "date_today": "2026-08-31",
-        "days_until_due": 2
+        "days_until_due": 32
       },
       "matches_db": true,
       "mismatches": {},
@@ -92,10 +122,10 @@
           "space_name": "Chapel Street shop",
           "landlord": "Elm City Properties",
           "monthly_rent": 2400,
-          "next_due": "2026-09-02",
-          "notes": null,
+          "next_due": "2026-10-02",
+          "notes": "Rent due 2026-09-02 paid 2026-08-31 (approval 3).",
           "date_today": "2026-08-31",
-          "days_until_due": 2,
+          "days_until_due": 32,
           "is_overdue": false
         },
         "matches_script_output": true
@@ -140,6 +170,166 @@
           "total_at_list_price": 1160
         },
         "matches_script_output": true
+      }
+    }
+  ],
+  "previous_runs": [
+    {
+      "server": "campus-customs",
+      "connection": ".mcp.json",
+      "database": "data/campus_customs_new.db",
+      "tested_at": "2026-10-11T15:24:12",
+      "tools_listed_by_server": [
+        "check_stock",
+        "get_lease",
+        "get_pricing"
+      ],
+      "all_passed": true,
+      "tests": [
+        {
+          "ticket": 101,
+          "vibe_coder_prompt": "Ticket 101: Tauhid Zaman wants one Classic Bulldog Tee in size S. Use the campus-customs MCP server to check how many CC-TEE-WHITE in size S we have on hand.",
+          "tool": "check_stock",
+          "arguments": {
+            "sku": "CC-TEE-WHITE",
+            "size": "S"
+          },
+          "tool_output": {
+            "sku": "CC-TEE-WHITE",
+            "items": [
+              {
+                "sku": "CC-TEE-WHITE",
+                "name": "Classic Bulldog Tee",
+                "size": "S",
+                "qty": 0,
+                "location": "Aisle B",
+                "in_stock": false
+              }
+            ]
+          },
+          "db_values_checked": {
+            "name": "Classic Bulldog Tee",
+            "qty": 0,
+            "location": "Aisle B"
+          },
+          "matches_db": true,
+          "mismatches": {},
+          "vibe_coder_call": {
+            "called_as": "mcp__campus-customs__check_stock",
+            "via": "Claude Code session in hw5, server loaded from .mcp.json",
+            "output": {
+              "sku": "CC-TEE-WHITE",
+              "items": [
+                {
+                  "sku": "CC-TEE-WHITE",
+                  "name": "Classic Bulldog Tee",
+                  "size": "S",
+                  "qty": 0,
+                  "location": "Aisle B",
+                  "in_stock": false
+                }
+              ]
+            },
+            "matches_script_output": true
+          }
+        },
+        {
+          "ticket": 102,
+          "vibe_coder_prompt": "Ticket 102: Elm City Properties says rent is due in 2 days. Use the campus-customs MCP server to look up lease 1 and tell me the rent amount, the due date and how many days are left.",
+          "tool": "get_lease",
+          "arguments": {
+            "lease_id": 1
+          },
+          "tool_output": {
+            "id": 1,
+            "space_name": "Chapel Street shop",
+            "landlord": "Elm City Properties",
+            "monthly_rent": 2400.0,
+            "next_due": "2026-09-02",
+            "notes": null,
+            "date_today": "2026-08-31",
+            "days_until_due": 2,
+            "is_overdue": false
+          },
+          "db_values_checked": {
+            "landlord": "Elm City Properties",
+            "monthly_rent": 2400.0,
+            "next_due": "2026-09-02",
+            "date_today": "2026-08-31",
+            "days_until_due": 2
+          },
+          "matches_db": true,
+          "mismatches": {},
+          "vibe_coder_call": {
+            "called_as": "mcp__campus-customs__get_lease",
+            "via": "Claude Code session in hw5, server loaded from .mcp.json",
+            "output": {
+              "id": 1,
+              "space_name": "Chapel Street shop",
+              "landlord": "Elm City Properties",
+              "monthly_rent": 2400,
+              "next_due": "2026-09-02",
+              "notes": null,
+              "date_today": "2026-08-31",
+              "days_until_due": 2,
+              "is_overdue": false
+            },
+            "matches_script_output": true
+          }
+        },
+        {
+          "ticket": 103,
+          "vibe_coder_prompt": "Ticket 103: the Yale AI Club wants 20 CC-HOOD-NAVY hoodies at a bulk discount. Use the campus-customs MCP server to get the unit cost, list price and margin for 20 of them.",
+          "tool": "get_pricing",
+          "arguments": {
+            "sku": "CC-HOOD-NAVY",
+            "qty": 20
+          },
+          "tool_output": {
+            "sku": "CC-HOOD-NAVY",
+            "qty": 20,
+            "unit_cost": 22.0,
+            "list_price": 58.0,
+            "unit_margin": 36.0,
+            "margin_pct": 62.1,
+            "total_cost": 440.0,
+            "total_at_list_price": 1160.0
+          },
+          "db_values_checked": {
+            "unit_cost": 22.0,
+            "list_price": 58.0,
+            "total_cost": 440.0
+          },
+          "matches_db": true,
+          "mismatches": {},
+          "vibe_coder_call": {
+            "called_as": "mcp__campus-customs__get_pricing",
+            "via": "Claude Code session in hw5, server loaded from .mcp.json",
+            "output": {
+              "sku": "CC-HOOD-NAVY",
+              "qty": 20,
+              "unit_cost": 22,
+              "list_price": 58,
+              "unit_margin": 36,
+              "margin_pct": 62.1,
+              "total_cost": 440,
+              "total_at_list_price": 1160
+            },
+            "matches_script_output": true
+          }
+        }
+      ],
+      "db_snapshot": {
+        "note": "Fresh working copy before any ticket was worked (Problem 4).",
+        "date_today": "2026-08-31",
+        "checking_balance": 3400.0,
+        "ticket_statuses": {
+          "101": "open",
+          "102": "open",
+          "103": "open"
+        },
+        "lease_1_next_due": "2026-09-02",
+        "payments_recorded": 0
       }
     }
   ]

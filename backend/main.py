@@ -86,7 +86,14 @@ class RejectBody(BaseModel):
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {"status": "ok", "model": MODEL_NAME, "busy_with_ticket": running_ticket}
+    assert team is not None
+    return {
+        "status": "ok",
+        "model": MODEL_NAME,
+        "ai_ready": team.ai_ready,  # False = no PORTKEY_API_KEY: board is read-only, runs are disabled
+        "ai_error": team.model_error,
+        "busy_with_ticket": running_ticket,
+    }
 
 
 @app.get("/tickets")
@@ -115,6 +122,9 @@ async def run_ticket(ticket_id: int) -> TicketRunResult:
     """Run the agent team (Boss first) on one ticket. Takes a minute or two."""
     global running_ticket
     await mcp("get_ticket", {"ticket_id": ticket_id})  # 404 if it does not exist
+    assert team is not None
+    if not team.ai_ready:
+        raise HTTPException(status_code=503, detail=team.model_error)
     if work_lock.locked():
         raise HTTPException(status_code=409, detail=f"The team is busy with ticket {running_ticket}.")
     async with work_lock:

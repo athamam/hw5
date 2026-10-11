@@ -1,8 +1,10 @@
 """Smoke test for the Campus Customs MCP server.
 
-Starts the server exactly as configured in .mcp.json, calls each tool over MCP,
-checks every returned value against a direct read of data/campus_customs_new.db,
-and saves the evidence to output/mcp_smoke.json.
+Starts the campus-customs server from .mcp.json (with this Python, so it works on
+Windows, macOS and Linux), calls each tool over MCP, checks every returned value
+against a direct read of data/campus_customs_new.db, and saves the evidence to
+output/mcp_smoke.json. Earlier results are kept under "previous_runs", each with a
+snapshot of the database state it was tested against.
 
 Run from the hw5 folder:
     .venv/Scripts/python tests/mcp_smoke_test.py
@@ -11,6 +13,7 @@ Run from the hw5 folder:
 import asyncio
 import json
 import sqlite3
+import sys
 from datetime import date, datetime
 from pathlib import Path
 
@@ -34,9 +37,9 @@ TESTS = [
     {
         "ticket": 102,
         "vibe_coder_prompt": (
-            "Ticket 102: Elm City Properties says rent is due in 2 days. "
+            "Ticket 102: Elm City Properties sent a rent notice. "
             "Use the campus-customs MCP server to look up lease 1 and tell me "
-            "the rent amount, the due date and how many days are left."
+            "the rent amount, the next due date and how many days are left."
         ),
         "tool": "get_lease",
         "arguments": {"lease_id": 1},
@@ -94,6 +97,21 @@ def expected_from_db(tool: str, args: dict) -> dict:
     raise ValueError(f"Unknown tool {tool}")
 
 
+def db_snapshot() -> dict:
+    """The database state the tools were tested against, so outputs can be checked later."""
+    conn = sqlite3.connect(f"file:{DB_PATH.as_posix()}?mode=ro", uri=True)
+    try:
+        return {
+            "date_today": conn.execute("SELECT date_today FROM desk").fetchone()[0],
+            "checking_balance": conn.execute("SELECT balance FROM cash_accounts WHERE name = 'checking'").fetchone()[0],
+            "ticket_statuses": dict(conn.execute("SELECT id, status FROM tickets ORDER BY id").fetchall()),
+            "lease_1_next_due": conn.execute("SELECT next_due FROM leases WHERE id = 1").fetchone()[0],
+            "payments_recorded": conn.execute("SELECT COUNT(*) FROM payments").fetchone()[0],
+        }
+    finally:
+        conn.close()
+
+
 def flatten_for_check(tool: str, output: dict) -> dict:
     """Pull the fields we compare out of the tool output."""
     if tool == "check_stock":
@@ -105,7 +123,8 @@ def flatten_for_check(tool: str, output: dict) -> dict:
 async def main() -> None:
     config = json.loads((ROOT / ".mcp.json").read_text(encoding="utf-8"))
     server = config["mcpServers"]["campus-customs"]
-    server["command"] = str(ROOT / server["command"])
+    server["command"] = sys.executable
+    server["args"] = [str(ROOT / a) if a.endswith(".py") else a for a in server.get("args", [])]
     server["cwd"] = str(ROOT)
 
     results = []
@@ -135,10 +154,15 @@ async def main() -> None:
         "connection": ".mcp.json",
         "database": "data/campus_customs_new.db",
         "tested_at": datetime.now().isoformat(timespec="seconds"),
+        "db_snapshot": db_snapshot(),
         "tools_listed_by_server": listed,
         "all_passed": all(r["matches_db"] for r in results),
         "tests": results,
     }
+    if OUT_PATH.exists():  # keep earlier evidence instead of overwriting it
+        old = json.loads(OUT_PATH.read_text(encoding="utf-8"))
+        previous = old.pop("previous_runs", [])
+        evidence["previous_runs"] = [*previous, old]
     OUT_PATH.parent.mkdir(exist_ok=True)
     OUT_PATH.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
     print(json.dumps(evidence, indent=2))

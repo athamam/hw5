@@ -46,11 +46,15 @@ USAGE_LIMITS = UsageLimits(
 )
 
 
+class MissingAPIKey(RuntimeError):
+    """Raised when an agent run is requested but no Portkey key is configured."""
+
+
 def build_model() -> OpenAIResponsesModel:
     """The one model every agent shares: gpt-6-luna via the Portkey gateway."""
     api_key = os.getenv("PORTKEY_API_KEY", "").strip()
     if not api_key:
-        raise RuntimeError("PORTKEY_API_KEY is not set (add it to the course-root .env).")
+        raise MissingAPIKey("PORTKEY_API_KEY is not set. Copy .env.example to .env in the hw5 folder and add your key.")
     client = AsyncOpenAI(
         api_key=api_key,
         base_url=PORTKEY_BASE_URL,
@@ -63,12 +67,23 @@ class Team:
     """Five agents sharing one model and one MCP connection. Any agent can delegate to any other."""
 
     def __init__(self) -> None:
-        self.model = build_model()
         self.mcp: MCPToolset = build_mcp_toolset()
-        tools = agent_view(self.mcp)
-        self.agents: dict[AgentName, Agent[TeamDeps, Any]] = {
-            name: module.build(self.model, tools) for name, module in AGENT_MODULES.items()
-        }
+        self.agents: dict[AgentName, Agent[TeamDeps, Any]] = {}
+        # Without a key the board still works read-only (tickets, cash, approvals, audit);
+        # only running the agents needs the model.
+        try:
+            self.model: OpenAIResponsesModel | None = build_model()
+        except MissingAPIKey as exc:
+            self.model = None
+            self.model_error = str(exc)
+        else:
+            tools = agent_view(self.mcp)
+            self.agents = {name: module.build(self.model, tools) for name, module in AGENT_MODULES.items()}
+            self.model_error = None
+
+    @property
+    def ai_ready(self) -> bool:
+        return self.model is not None
 
     async def __aenter__(self) -> Team:
         await self.mcp.__aenter__()  # one MCP server process for the whole session
@@ -106,6 +121,8 @@ class Team:
             assert state is not None
             deps = TeamDeps(agent_name=name, team=self, state=state)
 
+        if not self.ai_ready:
+            raise MissingAPIKey(self.model_error)
         agent = self.agents[name]
         try:
             async with agent.iter(task, deps=deps, usage=usage, usage_limits=USAGE_LIMITS) as run:

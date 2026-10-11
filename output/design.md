@@ -48,6 +48,7 @@ Each agent is a small **Labubu-style creature built only from HTML and CSS** (no
   - **"Resolved ✓"** in green when the Boss closes it. Pink hearts also float up the screen.
   - **"Crew done · needs your OK"** in amber when the crew has done its part but a human must still approve something.
 - The ticket being worked **pulses**, and every Start button is disabled until the run ends, matching the backend's one-run-at-a-time lock.
+- **Closing the loop:** when you sign the last slip on a ticket, a toast says so, the ticket shows "All requests signed. Let the Boss close it out", and its button turns green into **✔ Close out**. One click runs the Boss's close-out, and the ticket gets its **Resolved ✓** stamp. You never have to guess that "Run again" is the way to finish a ticket.
 
 ## How cash shows up
 
@@ -77,6 +78,7 @@ The Boss's final call sits on top as **"Boss's call"**. Agents that sat out are 
 - A red **LIVE** tag and "the crew is thinking…" dots while the run is going. The feed auto-scrolls and uses `aria-live` so screen readers announce new lines.
 - The Boss's creature is the logo in the top bar, and "Pink Desk" sits in a slightly tilted label.
 - Everything respects `prefers-reduced-motion`: all bouncing, stamping and coin animation turns off for people who prefer it.
+- **Read-only mode:** if there's no `PORTKEY_API_KEY`, the board still opens and shows every ticket, the cash, the approvals and past runs. A **🔒 Read-only** chip and a short banner explain how to add the key, and only the run buttons are switched off. Someone opening the repo without a key still sees a working desk, not an error screen.
 - Keyboard friendly: tickets are focusable and can be selected with Enter, and every button has a visible pink focus ring.
 
 ## Why these choices

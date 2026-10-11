@@ -10,6 +10,8 @@ Log of prompts given to the AI coding assistant, organized by problem.
 
 2. > Delete the joke
 
+   *What was lacking after the first prompt:* the setup skill left a `joke.txt` proof file in hw5 that I did not want in my homework.
+
 3. > I will first give you context and some ground rules for you to understand and maintain throughout the hw assignment. Then we will begin each problem one by one.
    >
    > 1. Scenario
@@ -44,6 +46,8 @@ Log of prompts given to the AI coding assistant, organized by problem.
    > I will submit my hw via a public github repo and I will submit the link
 
 4. > yes gpt-6-luna is correct, commit the copy, log prompts
+
+   *What was lacking after the first prompt:* my ground-rules prompt left three open questions (the exact model name, whether to commit the working database copy, and whether to log my prompts), so I answered them.
 
 5. > Starting with problem 1. Create AI_prompts.md and log everything I say
    >
@@ -95,7 +99,11 @@ Log of prompts given to the AI coding assistant, organized by problem.
 
 2. > Do it for me
 
+   *What was lacking after the first prompt:* the MCP server was saved in `.mcp.json` and tested with a script, but it was not connected to the vibe coder's own session yet, so the tools could not be called directly.
+
 3. > ok
+
+   *What was lacking after the previous prompt:* the vibe coder moved the session into the hw5 folder and needed one more message for the MCP tools to load before calling them.
 
 ---
 
@@ -141,6 +149,8 @@ Log of prompts given to the AI coding assistant, organized by problem.
 
 2. > desck_tickets.html should be in output/
 
+   *What was lacking after the first prompt:* my first prompt said `out/` by mistake, so I made sure the page sits in `output/` with the other deliverables.
+
 ---
 
 ## Problem 7: Backend routes
@@ -162,6 +172,8 @@ Log of prompts given to the AI coding assistant, organized by problem.
 ---
 
 ## Problem 8: Agent dashboard
+
+*Note: "Wait till later" answers the vibe coder's question at the end of Problem 7 (should approving the last request automatically resolve a ticket?). It was settled in Problem 9 with the Boss's close-out run.*
 
 1. > Wait till later. For now moving on to problem 8. Build the frontend dashboard in frontend/ with React+Vite+TypeScript. This page should call the routes built in the previous problem. At minimum the board should:
    >
@@ -231,3 +243,5 @@ Log of prompts given to the AI coding assistant, organized by problem.
    > This is the expected layout *(screenshot of the expected hw5/ folder tree: AI_prompts.md, requirements.txt, .env.example, .gitignore, .mcp.json, README.md, data/ with both databases, mcp_server/ with server.py and README.md, frontend/, backend/ with main.py, models.py and prompts/ (boss, inventory, accounting, facilities, customer_service), output/ with harness.md, mcp_smoke.json, desk_tickets.html, design.md, resolved_tickets.json, resolved_board.html, audit_trail.json, github_url.txt)*
 
 2. > That is the end of problem 11. Any pending items or can I submit?
+
+   *What was lacking after the first prompt:* the first prompt did not include a final check, so I asked whether anything was still pending before submitting.

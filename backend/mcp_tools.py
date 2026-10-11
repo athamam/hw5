@@ -14,6 +14,7 @@ Three guardrails are applied on the client side, on top of the server's own rule
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import replace
 from typing import Any
 
@@ -63,10 +64,16 @@ assert not any(tools & HUMAN_ONLY_TOOLS for tools in AGENT_TOOLS.values())
 
 
 def _server_config() -> dict[str, Any]:
-    """Read .mcp.json and make its relative paths absolute so it runs from anywhere."""
+    """Read the campus-customs entry from .mcp.json and make it run on any computer.
+
+    The server is started with the same Python that runs the backend (the project's
+    virtual environment), so it works on Windows, macOS and Linux no matter which
+    interpreter path .mcp.json lists for the vibe coder.
+    """
     config = json.loads(MCP_CONFIG_PATH.read_text(encoding="utf-8"))
     server = dict(config["mcpServers"][MCP_SERVER_NAME])
-    server["command"] = str(ROOT / server["command"])
+    server["command"] = sys.executable
+    server["args"] = [str(ROOT / arg) if arg.endswith(".py") else arg for arg in server.get("args", [])]
     server["cwd"] = str(ROOT)
     return {"mcpServers": {MCP_SERVER_NAME: server}}
 

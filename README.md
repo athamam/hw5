@@ -24,14 +24,14 @@ hw5/
 ├── AI_prompts.md            # every prompt given to the AI coding assistant, by problem
 ├── requirements.txt         # Python dependencies (pinned)
 ├── .env.example             # copy to .env and add PORTKEY_API_KEY (real .env is git-ignored)
-├── .mcp.json                # registers the campus-customs MCP server (vibe coder + backend)
+├── .mcp.json                # registers the campus-customs MCP server for the vibe coder
 ├── data/
 │   ├── campus_customs.db        # ORIGINAL, never modified
-│   └── campus_customs_new.db    # working copy that the tools update (committed in its final, resolved state)
+│   └── campus_customs_new.db    # working copy the tools update (committed in its final, resolved state)
 ├── mcp_server/              # server.py (21 tools) + README.md
 ├── backend/                 # main.py (FastAPI), models.py, config.py, team.py, mcp_tools.py, audit.py
 │   ├── agents/              # one file per agent + base.py (shared builder and delegate tool)
-│   └── prompts/             # shop_rules.md + boss/inventory/accounting/facilities/customer_service.md
+│   └── prompts/             # boss / inventory / accounting / facilities / customer_service.md + shop_rules.md
 ├── frontend/                # React + Vite + TypeScript board ("Pink Desk")
 ├── tests/mcp_smoke_test.py  # MCP smoke test -> output/mcp_smoke.json
 └── output/                  # harness.md, mcp_smoke.json, desk_tickets.html, design.md,
@@ -42,55 +42,78 @@ hw5/
 
 Requires Python 3.11+ and Node 20+.
 
+**Windows (PowerShell or Git Bash)**
 ```bash
 python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt     # macOS/Linux: .venv/bin/python
-cp .env.example .env                                         # then put your PORTKEY_API_KEY in .env
+.venv/Scripts/python -m pip install -r requirements.txt
+copy .env.example .env            # Git Bash: cp .env.example .env
+cd frontend
+npm install
+cd ..
+```
+
+**macOS / Linux**
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+cp .env.example .env
 cd frontend && npm install && cd ..
 ```
 
-The backend reads `PORTKEY_API_KEY` from `hw5/.env`, and falls back to a `.env` two folders up (the course folder).
+Then open `.env` and put in your own `PORTKEY_API_KEY`. The backend reads it from `hw5/.env`, and falls back to a `.env` two folders up (the course folder).
+
+**No key?** The app still runs in **read-only mode**. The board shows the tickets, cash, approvals and the recorded runs, and only the "run the agents" buttons are switched off (`/health` reports `"ai_ready": false`).
 
 ## 1. Copy the original DB to the working copy (clean run)
 
 The original `data/campus_customs.db` is never written to. To start clean, copy it over the working copy:
 
 ```bash
+# macOS / Linux / Git Bash
 cp data/campus_customs.db data/campus_customs_new.db
 ```
-
-PowerShell: `Copy-Item data/campus_customs.db data/campus_customs_new.db -Force`
+```powershell
+# Windows PowerShell
+Copy-Item data/campus_customs.db data/campus_customs_new.db -Force
+```
 
 The same reset is available while the app is running: the **↺ Reset shop** button on the board, `POST /reset` on the backend, or the MCP tool `reset_database`. Each one copies the original and re-creates the four workflow tables (`ticket_updates`, `approvals`, `purchase_orders`, `drafts`).
 
 ## 2. Start the MCP server
 
 ```bash
-.venv/Scripts/python mcp_server/server.py
+.venv/Scripts/python mcp_server/server.py      # Windows
+.venv/bin/python mcp_server/server.py          # macOS / Linux
 ```
 
 This runs the `campus-customs` server over stdio. You normally **don't need to start it by hand**:
 
-- The **backend starts its own copy** from `.mcp.json` when it boots.
-- A vibe coder (Claude Code) opened in this folder picks it up from `.mcp.json`.
+- **The backend starts its own copy** with the same Python that runs the backend, so it works on every OS.
+- **A vibe coder** (Claude Code) opened in this folder picks it up from `.mcp.json`. That file points at the Windows virtual-environment Python (`.venv/Scripts/python.exe`). On macOS/Linux, change `"command"` to `.venv/bin/python`.
 
 To check that all tools work against the database:
 
 ```bash
-.venv/Scripts/python tests/mcp_smoke_test.py
+.venv/Scripts/python tests/mcp_smoke_test.py   # macOS / Linux: .venv/bin/python tests/mcp_smoke_test.py
 ```
 
 ## 3. Start the FastAPI backend
 
+From the `backend/` folder:
+
 ```bash
 cd backend
-../.venv/Scripts/python -m uvicorn main:app --reload --port 8000
+../.venv/Scripts/python -m uvicorn main:app --reload --port 8000    # Windows
+../.venv/bin/python -m uvicorn main:app --reload --port 8000        # macOS / Linux
 ```
+
+If the virtual environment is activated, this is simply `uvicorn main:app --reload --port 8000`.
 
 The API is at http://localhost:8000, with docs at http://localhost:8000/docs. It allows the board's origin, `http://localhost:5173`. When you stop it, stop the whole process tree: uvicorn's reloader plus the MCP server child process.
 
 | Route | What it does |
 |---|---|
+| `GET /health` | API status, model, and whether the AI key is set (`ai_ready`) |
 | `GET /tickets` | all tickets, open or resolved |
 | `POST /tickets/{id}/run` | run the agent team (Boss first) on one ticket |
 | `GET /events?after=` | recent agent events: who said what and which tools they used |
@@ -114,25 +137,26 @@ Open http://localhost:5173. The board talks to http://localhost:8000. To use a d
 1. **Reset the database:** click **↺ Reset shop** on the board, or run `curl -X POST http://localhost:8000/reset`. Checking should read **$3,400.00** with tickets 101, 102 and 103 all open.
 2. Type your name in **Signing as** in the approval tray.
 3. For each ticket, **in order 101 → 102 → 103**:
-   1. Click **▶ Start the crew**. The Boss delegates, the crew prepares requests, and the ticket stops at *Needs your OK*.
+   1. Click **▶ Start the crew**. The Boss delegates, the crew prepares requests, and the ticket stops at *Crew done · needs your OK*.
    2. Review each slip in **Needs your signature** and approve it. For ticket 101, pay invoice 501 *before* approving the PO; the PO is refused while 501 is unpaid.
-   3. Click **↻ Run again**. The Boss's close-out run checks what was decided and marks the ticket **Resolved ✓**.
+   3. When every slip on the ticket is signed, its button turns green: click **✔ Close out**. The Boss checks what you decided and marks the ticket **Resolved ✓**.
 4. Expected result: all three tickets resolved and checking at **$160.00**.
    - $3,400 − $840 (invoice 501, ticket 101) − $2,400 (rent, ticket 102) = $160.
-   - Ticket 103's discount and both purchase orders don't move cash.
+   - Ticket 103's discount and the purchase orders don't move cash.
 
 Command-line alternative for the agent part only (approvals still go through the board or API):
 
 ```bash
-.venv/Scripts/python -m backend.team --all --reset
+.venv/Scripts/python -m backend.team --all --reset    # macOS / Linux: .venv/bin/python -m backend.team --all --reset
 ```
 
 Every agent step is appended to `output/audit_trail.json`. The file is never wiped.
 
 ## Results and write-ups
 
-- `output/harness.md`: tables, MCP tools, agents, routes, dashboard, safety rules and token limits
+- `output/harness.md`: tables (and how the tickets link to them), MCP tools, agents, routes, dashboard, safety rules and token limits
 - `output/desk_tickets.html`: Expected vs Actual per ticket, the itemized Cash tab and the Reflection (open by double-clicking)
 - `output/resolved_tickets.json` and `output/resolved_board.html`: the final outcome and board screenshots for 101, 102 and 103
+- `output/mcp_smoke.json`: MCP tool tests, checked against the database they ran on
 - `output/design.md`: dashboard design choices
 - `AI_prompts.md`: the prompt log

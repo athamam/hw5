@@ -23,6 +23,7 @@ export default function App() {
   const [approvals, setApprovals] = useState<Approval[]>([])
   const [cash, setCash] = useState<Cash | null>(null)
   const [model, setModel] = useState<string>('')
+  const [aiError, setAiError] = useState<string | null>(null)
   const [online, setOnline] = useState<boolean | null>(null)
   const [selected, setSelected] = useState<number | null>(null)
   const [running, setRunning] = useState<number | null>(null)
@@ -69,6 +70,7 @@ export default function App() {
       try {
         const h = await api.health()
         setModel(h.model)
+        setAiError(h.ai_ready ? null : h.ai_error ?? 'PORTKEY_API_KEY is not set.')
         setOnline(true)
         await Promise.all([refreshBoard(), pollEvents()])
       } catch {
@@ -122,6 +124,7 @@ export default function App() {
       await refreshBoard()
       if (a.kind === 'payment') toast('ok', `Paid ${money(a.amount)}. Checking went ${money(before)} → ${money(res.cash_balance)}.`)
       else toast('ok', `Approved #${a.id}. No cash moved.`)
+      nudgeCloseOut(a.ticket_id)
     } catch (e) {
       toast('bad', (e as Error).message)
       throw e
@@ -133,9 +136,20 @@ export default function App() {
       await api.reject(a.id, signer.trim(), reason)
       await refreshBoard()
       toast('warn', `Rejected #${a.id}.`)
+      nudgeCloseOut(a.ticket_id)
     } catch (e) {
       toast('bad', (e as Error).message)
       throw e
+    }
+  }
+
+  // After the last signature on a ticket, point the human at the Boss's close-out run.
+  const nudgeCloseOut = async (ticketId: number | null) => {
+    if (ticketId === null) return
+    const fresh = await api.approvals()
+    setApprovals(fresh.approvals)
+    if (!fresh.approvals.some(x => x.ticket_id === ticketId && x.status === 'pending')) {
+      toast('ok', `Every request on ticket #${ticketId} is decided. Click ✔ Close out so the Boss can resolve it.`)
     }
   }
 
@@ -168,6 +182,13 @@ export default function App() {
   }, [events, selected, running, runStart])
 
   const pendingCount = approvals.filter(a => a.status === 'pending').length
+  // Tickets the crew parked for a human, where the human has now decided everything.
+  const readyToClose = new Set(
+    tickets
+      .filter(t => t.status === 'waiting_on_human')
+      .filter(t => !approvals.some(a => a.ticket_id === t.id && a.status === 'pending'))
+      .map(t => t.id),
+  )
   const isLive = running !== null && running === selected
 
   return (
@@ -185,11 +206,18 @@ export default function App() {
             {online === false ? `Backend offline (${API_URL})` : online ? 'Backend live' : 'Connecting…'}
           </span>
           {model && <span className="model-chip">🧠 {model}</span>}
+          {aiError && <span className="readonly-chip" title={aiError}>🔒 Read-only: no AI key</span>}
           {pendingCount > 0 && <span className="pending-chip">🖊 {pendingCount} awaiting you</span>}
           <span className="cash-chip">{cash ? money(cash.balance) : '…'}</span>
           <button className="btn btn-ghost" onClick={reset} disabled={running !== null}>↺ Reset shop</button>
         </div>
       </header>
+
+      {online && aiError && (
+        <div className="offline readonly">
+          The board is in <b>read-only mode</b>: {aiError} You can still browse tickets, cash, approvals and past runs.
+        </div>
+      )}
 
       {online === false && (
         <div className="offline">
@@ -203,6 +231,8 @@ export default function App() {
           tickets={tickets}
           selected={selected}
           running={running}
+          canRun={!aiError}
+          readyToClose={readyToClose}
           justFinished={justFinished}
           onSelect={setSelected}
           onRun={startRun}

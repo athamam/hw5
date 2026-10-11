@@ -5,6 +5,8 @@ interface Props {
   tickets: Ticket[]
   selected: number | null
   running: number | null
+  canRun: boolean
+  readyToClose: Set<number>
   justFinished: Set<number>
   onSelect: (id: number) => void
   onRun: (id: number) => void
@@ -23,7 +25,7 @@ function ticketLine(t: Ticket): string {
   return t.type
 }
 
-export function TicketBoard({ tickets, selected, running, justFinished, onSelect, onRun }: Props) {
+export function TicketBoard({ tickets, selected, running, canRun, readyToClose, justFinished, onSelect, onRun }: Props) {
   return (
     <section className="panel tickets" aria-label="Tickets">
       <div className="panel-head">
@@ -34,6 +36,7 @@ export function TicketBoard({ tickets, selected, running, justFinished, onSelect
         {tickets.map(t => {
           const isSel = t.id === selected
           const isRun = t.id === running
+          const closeOut = readyToClose.has(t.id)
           return (
             <li key={t.id}>
               <article
@@ -55,16 +58,18 @@ export function TicketBoard({ tickets, selected, running, justFinished, onSelect
                   <p className="ticket-from">from <strong>{t.requester}</strong></p>
                   <p className="ticket-line">{ticketLine(t)}</p>
                   {t.notes && <p className="ticket-note">“{t.notes}”</p>}
+                  {closeOut && !isRun && <p className="closeout-hint">✍ All requests signed. Let the Boss close it out.</p>}
                   <div className="ticket-foot">
                     <button
-                      className="btn btn-run"
-                      disabled={running !== null}
+                      className={`btn btn-run ${closeOut ? 'btn-closeout' : ''}`}
+                      disabled={running !== null || !canRun}
+                      title={!canRun ? 'Add PORTKEY_API_KEY to .env to run the agents' : closeOut ? 'All approvals are decided: the Boss checks them and resolves the ticket' : undefined}
                       onClick={e => {
                         e.stopPropagation()
                         onRun(t.id)
                       }}
                     >
-                      {isRun ? <><span className="spinner" /> Crew at work…</> : t.status === 'open' ? '▶ Start the crew' : '↻ Run again'}
+                      {isRun ? <><span className="spinner" /> Crew at work…</> : t.status === 'open' ? '▶ Start the crew' : closeOut ? '✔ Close out' : '↻ Run again'}
                     </button>
                     {(t.status === 'resolved' || t.status === 'waiting_on_human') && (
                       <div className={`stamp ${t.status === 'resolved' ? 'stamp-resolved' : 'stamp-waiting'} ${justFinished.has(t.id) ? 'stamp-new' : ''}`}>

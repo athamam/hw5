@@ -51,6 +51,16 @@ Fields: `id`, `type`, `requester`, `subject`, `sku`, `size`, `qty`, `lease_id`, 
 
 Why it matters: This is the work board. Boss reads each open ticket, routes it to the right agents, and closes it when resolved.
 
+### How the three open tickets link to other tables
+
+| Ticket | Ticket fields | Links to | What the agents need from there |
+|---|---|---|---|
+| **101** customer_order (Tauhid Zaman) | `sku` CC-TEE-WHITE, `size` S, `qty` 1, `invoice_id` 501 | `inventory` (CC-TEE-WHITE, S) → qty 0; `pricing` (CC-TEE-WHITE) → $8 cost; `invoices` 501 → `vendor_id` 1 → `vendors` 1 Bulldog Print Co | The tee is out of stock, and the apparel vendor that would reprint it is blocked: invoice 501 ($840, due 2026-08-28) is unpaid and overdue against `desk.date_today` |
+| **102** rent_notice (Elm City Properties) | `lease_id` 1 | `leases` 1 → $2,400 rent, `next_due` 2026-09-02; `cash_accounts` checking $3,400 | The notice must match the lease (amount, and 2 days after `desk.date_today`), and cash must cover the rent |
+| **103** price_override (Yale AI Club) | `sku` CC-HOOD-NAVY, `size` M, `qty` 20 | `inventory` (CC-HOOD-NAVY, M) → qty 8; `pricing` (CC-HOOD-NAVY) → $22 cost, $58 list; `vendors` 1 (apparel) for the 12 short | How far the discount can go (never below $22), and whether the 12-hoodie shortfall can be restocked |
+
+All three tickets also depend on `desk.date_today` (2026-08-31), and every money step ends up in `payments` and `cash_accounts`.
+
 ### Workflow tables (added to the working copy only)
 
 The MCP server creates these in `campus_customs_new.db` on start and after every reset. The original database never has them.
@@ -92,6 +102,10 @@ Built with PydanticAI in `backend/`. Every agent uses **gpt-6-luna** through Por
 
 All five agents also have `delegate`.
 
+**Prompt versions:** the five agent prompts were expanded after the Problem 9 run, using lessons from the Reflection. The changes: each prompt now restates the shop rules its agent needs, agents trust facts a teammate already reported, Accounting flags any PO bigger than projected cash, and Customer Service keeps internal steps out of drafts. The Problem 9 audit trail was produced by the earlier versions (commit `9d11617` in git history). The expanded prompts were then checked on an isolated copy of the project (its own database and audit file, not part of these outputs). All three tickets were worked with every rule held: no payment without a human, no duplicates, only the needed specialists, and a close-out that reached `resolved`.
+
+**Model name in responses:** every request is sent as `gpt-6-luna`. In `audit_trail.json` the response field `model_name` reads `gpt-6-luna-global`, which is the name Portkey reports back for the same model (its global routing). No other model is used anywhere.
+
 **Agent loop:** `Team.run_agent` in `backend/team.py` steps through each agent with `agent.iter()`. Every node (user prompt, model request, tool calls, end, error) is appended to `output/audit_trail.json`.
 
 **Audit trail fields:** timestamp, run_id, ticket_id, step, agent, depth, delegated_by, model, node, detail (the tool calls with arguments, the tool results, the text and the final output) and the cumulative token usage for the ticket. The file is append-only.
@@ -100,7 +114,7 @@ All five agents also have `delegate`.
 1. **Main run** (`POST /tickets/{id}/run`). The backend reads today's date and the ticket row from MCP (`get_desk`, `get_ticket`) once, and puts them in every agent's instructions so nobody wastes tool calls fetching them again.
 2. The Boss delegates **one specialist at a time** (`delegate` is a sequential tool), calls Customer Service last with the confirmed facts, and sets the ticket to `waiting_on_human` while approvals are pending.
 3. **Human step.** A person signs and approves or rejects each request on the dashboard. Only this step moves cash.
-4. **Close-out run** (the same route again). The Boss sees the ticket is no longer `open`, checks what the human decided, asks Customer Service for one follow-up draft if the outcome changed, and sets `resolved`. The server refuses `resolved` while anything is still pending.
+4. **Close-out run** (the board's **✔ Close out** button, or the same route again). The Boss sees the ticket is no longer `open`, checks what the human decided, asks Customer Service for one follow-up draft if the outcome changed, and sets `resolved`. The server refuses `resolved` while anything is still pending.
 
 ---
 
@@ -177,7 +191,7 @@ On the full run (Problem 9) the busiest single run, ticket 101's main run, used 
 
 `backend/main.py` (FastAPI). Start it from `backend/` with `uvicorn main:app --reload --port 8000`, then open http://localhost:8000 (interactive docs at http://localhost:8000/docs). Every route reads or writes through the MCP server.
 
-- `GET /health`: confirms the API is up, shows the model (gpt-6-luna) and which ticket the team is working on, if any.
+- `GET /health`: confirms the API is up, shows the model (gpt-6-luna), whether the AI key is set (`ai_ready`; without it the board is read-only and `POST /tickets/{id}/run` returns 503), and which ticket the team is working on, if any.
 - `GET /tickets`: returns every ticket with its status and whether it is open or resolved.
 - `GET /tickets/{id}`: returns one ticket with its notes, approval requests, purchase orders and customer drafts.
 - `POST /tickets/{id}/run`: runs the agent team on that ticket (Boss first) and returns the Boss's decision and token usage. Only one run at a time.
@@ -196,13 +210,13 @@ On the full run (Problem 9) the busiest single run, ticket 101's main run, used 
 
 | Board area | What it shows | Routes it calls |
 |---|---|---|
-| Ticket rail | The 3 tickets as paper tickets with a status pill, a **Start the crew / Run again** button, and a rubber stamp when a run finishes (**Resolved ✓** or **Crew done · needs your OK**) | `GET /tickets`, `POST /tickets/{id}/run` |
+| Ticket rail | The 3 tickets as paper tickets with a status pill, a **Start the crew** button, and a rubber stamp when a run finishes (**Resolved ✓** or **Crew done · needs your OK**). Once a human has decided every request on a ticket, the button turns green into **✔ Close out** with a hint, and one click runs the Boss's close-out to `resolved` | `GET /tickets`, `GET /approvals`, `POST /tickets/{id}/run` |
 | The crew | The five agents as HTML/CSS creatures at desks. Whoever is working bounces and shows what it is saying; agents not needed are greyed out. Hand-off trail and a token-guard bar | `GET /events?after=` (polled every 1.2 s during a run) |
 | Live chatter | Every agent turn: what it said, each MCP tool call as a chip (plain-English verb plus the exact call), hand-offs, and final reports, indented by delegation depth | `GET /events` |
 | Shift report | One card per agent after the run: summary, records created, approvals, drafts, tools used; the Boss's call on top | `GET /events` (final agent outputs) |
 | Checking | Piggy bank with the checking balance (animates down on a payment), projected balance bar, and a receipt tape of paid items with the signer | `GET /cash`, `GET /approvals` |
 | Needs your signature | Approval slips (payment, PO, discount) with facts and the requesting agent. The human signs with their name and approves or rejects; refusals from the backend show as toasts | `GET /approvals`, `POST /approvals/{id}/approve`, `POST /approvals/{id}/reject` |
-| Top bar | Backend status, model, pending count, balance, **Reset shop** | `GET /health`, `POST /reset` |
+| Top bar | Backend status, model, pending count, balance, **Reset shop**. With no `PORTKEY_API_KEY` a **🔒 Read-only** chip and banner appear: run buttons are off, everything else still works | `GET /health`, `POST /reset` |
 
 ---
 
@@ -237,5 +251,5 @@ The database was reset first (`POST /reset`), so the run started at **$3,400.00*
 | `backend/audit.py` | Append-only writer for `output/audit_trail.json` |
 | `backend/main.py` | FastAPI routes |
 | `frontend/` | React dashboard |
-| `tests/mcp_smoke_test.py` | MCP smoke test → `output/mcp_smoke.json` |
+| `tests/mcp_smoke_test.py` | MCP smoke test → `output/mcp_smoke.json` (keeps earlier runs under `previous_runs`, each with a database snapshot) |
 | `output/` | harness.md, mcp_smoke.json, audit_trail.json, desk_tickets.html, design.md, resolved_tickets.json, resolved_board.html, screenshots/ |

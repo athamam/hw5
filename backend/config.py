@@ -1,8 +1,9 @@
 """Shared settings for the Campus Customs agent team.
 
 The model is set in exactly one place: every agent uses MODEL_NAME through
-the Portkey gateway. PORTKEY_API_KEY is read from the course-root .env and is
-never written to any file in this repo.
+the Portkey gateway. PORTKEY_API_KEY is read from hw5/.env (copy .env.example),
+falling back to the course-folder .env, and is never written to any file in this repo.
+Without a key the API still runs read-only; only agent runs are disabled.
 """
 
 import os
