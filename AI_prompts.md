@@ -229,3 +229,5 @@ Log of prompts given to the AI coding assistant, organized by problem.
    > README should explain: copy original DB to the working copy when I need a clean run, start MCP server, start FastAPI backend, start the React board, reset the DB before a full 3 ticket run
    >
    > This is the expected layout *(screenshot of the expected hw5/ folder tree: AI_prompts.md, requirements.txt, .env.example, .gitignore, .mcp.json, README.md, data/ with both databases, mcp_server/ with server.py and README.md, frontend/, backend/ with main.py, models.py and prompts/ (boss, inventory, accounting, facilities, customer_service), output/ with harness.md, mcp_smoke.json, desk_tickets.html, design.md, resolved_tickets.json, resolved_board.html, audit_trail.json, github_url.txt)*
+
+2. > That is the end of problem 11. Any pending items or can I submit?
